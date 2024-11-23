@@ -1,8 +1,10 @@
 <template>
   <div class="crawler-page">
     <div class="crawler-content">
-      <h1>网页内容智能分析</h1>
-      <p class="subtitle">输入网址，一键提取关键信息</p>
+      <h1 style="font-size: 2.5rem; font-weight: bold; margin-bottom: 1rem">智能网页内容分析</h1>
+      <p class="subtitle">
+        一键提取网页内容，实现快速、准确的知识获取
+      </p>
       <WebCrawler />
     </div>
   </div>
