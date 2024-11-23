@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+requests
+beautifulsoup4
+chardet
+openai>=1.0.0
+python-dotenv
+aiohttp
