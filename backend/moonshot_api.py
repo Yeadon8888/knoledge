@@ -42,6 +42,73 @@ class MoonshotAPI:
         self.client = OpenAI(api_key=api_key, base_url="https://api.moonshot.cn/v1")
         logger.info("MoonshotAPI initialized")
 
+    def fix_json_string(self, text: str) -> str:
+        """修复常见的JSON字符串问题"""
+        # 移除所有控制字符
+        import re
+        text = ''.join(char for char in text if ord(char) >= 32 or char in '\n\r\t')
+        
+        # 处理未终止的字符串
+        lines = text.split('\n')
+        fixed_lines = []
+        in_string = False
+        for line in lines:
+            # 计算行中的引号数量
+            quote_count = line.count('"')
+            if quote_count % 2 != 0:  # 奇数个引号
+                if not in_string:
+                    # 开始一个字符串
+                    in_string = True
+                else:
+                    # 结束一个字符串
+                    in_string = False
+                    line = line + '"'  # 添加缺失的引号
+            fixed_lines.append(line)
+        
+        text = '\n'.join(fixed_lines)
+        
+        # 替换常见问题
+        replacements = [
+            ('"', '"'),  # 中文引号
+            ('"', '"'),  # 中文引号
+            ('：', ':'),  # 中文冒号
+            ('，', ','),  # 中文逗号
+            ('、', ','),  # 中文顿号
+            ('｛', '{'),  # 全角括号
+            ('｝', '}'),  # 全角括号
+            ('［', '['),  # 全角括号
+            ('］', ']'),  # 全角括号
+            ('（', '('),  # 全角括号
+            ('）', ')'),  # 全角括号
+        ]
+        for old, new in replacements:
+            text = text.replace(old, new)
+        
+        # 确保所有键都有引号
+        def add_quotes_to_keys(match):
+            key = match.group(1)
+            if not (key.startswith('"') and key.endswith('"')):
+                return f'"{key}":'
+            return match.group(0)
+        
+        text = re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)\s*:', add_quotes_to_keys, text)
+        
+        # 移除注释
+        text = re.sub(r'//.*$', '', text, flags=re.MULTILINE)
+        text = re.sub(r'/\*.*?\*/', '', text, flags=re.DOTALL)
+        
+        # 处理多余的逗号
+        text = re.sub(r',(\s*[}\]])', r'\1', text)
+        
+        # 确保最外层是一个对象
+        text = text.strip()
+        if not text.startswith('{'):
+            text = '{' + text
+        if not text.endswith('}'):
+            text = text + '}'
+            
+        return text
+
     def extract_knowledge(self, content: str) -> dict:
         """从文本中提取结构化知识"""
         try:
@@ -72,21 +139,39 @@ class MoonshotAPI:
                 response_text = response.choices[0].message.content
                 logger.debug(f"Raw API Response: {response_text}")
 
+                # 清理响应文本
+                response_text = response_text.strip()
+                if response_text.startswith('```json'):
+                    response_text = response_text[7:]
+                if response_text.endswith('```'):
+                    response_text = response_text[:-3]
+                response_text = response_text.strip()
+                
+                logger.debug(f"Cleaned Response Text: {response_text}")
+
                 # 尝试解析JSON
                 try:
                     knowledge = json.loads(response_text)
                     logger.info("Successfully parsed JSON response")
-                    
-                    # 确保所有值都是数组格式
-                    for key in knowledge:
-                        if not isinstance(knowledge[key], list):
-                            knowledge[key] = [knowledge[key]] if knowledge[key] else []
-                    
-                    return knowledge
                 except json.JSONDecodeError as e:
                     logger.error(f"Failed to parse JSON: {str(e)}")
                     logger.error(f"Invalid JSON response: {response_text}")
-                    raise ValueError(f"Invalid JSON response from API: {str(e)}")
+                    # 尝试修复JSON
+                    try:
+                        fixed_json = self.fix_json_string(response_text)
+                        logger.debug(f"Fixed JSON: {fixed_json}")
+                        knowledge = json.loads(fixed_json)
+                        logger.info("Successfully parsed JSON after fixing")
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Failed to parse fixed JSON: {str(e)}")
+                        raise ValueError(f"Invalid JSON response from API: {str(e)}")
+                
+                # 确保所有值都是数组格式
+                for key in knowledge:
+                    if not isinstance(knowledge[key], list):
+                        knowledge[key] = [knowledge[key]] if knowledge[key] else []
+                
+                return knowledge
                     
             except Exception as e:
                 logger.error(f"API call failed: {str(e)}")
