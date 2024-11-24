@@ -54,6 +54,9 @@
         <div v-if="fusionResult" class="result-section">
           <el-divider>合并结果</el-divider>
           <el-card class="result-card">
+            <div class="result-header">
+              <el-button type="primary" size="small" @click="copyResult">复制结果</el-button>
+            </div>
             <pre class="result-content">{{ fusionResult }}</pre>
           </el-card>
         </div>
@@ -156,6 +159,16 @@ const performFusion = async () => {
     loading.value = false
   }
 }
+
+// 复制结果
+const copyResult = async () => {
+  try {
+    await navigator.clipboard.writeText(fusionResult.value)
+    ElMessage.success('已复制到剪贴板')
+  } catch (error) {
+    ElMessage.error('复制失败，请手动复制')
+  }
+}
 </script>
 
 <style scoped>
@@ -228,6 +241,11 @@ const performFusion = async () => {
   font-size: 14px;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+.result-header {
+  margin-bottom: 12px;
+  text-align: right;
 }
 
 :deep(.el-card__header) {
