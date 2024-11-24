@@ -42,10 +42,11 @@
         <el-button 
           type="primary" 
           @click="performFusion" 
-          :disabled="hasErrors"
+          :disabled="hasErrors || loading"
+          :loading="loading"
           :icon="Merge"
         >
-          合并内容
+          AI融合
         </el-button>
       </div>
 
@@ -65,6 +66,7 @@
 import { ref, computed } from 'vue'
 import { Delete, Plus } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import axios from 'axios'
 
 const Merge = 'Merge'
 
@@ -78,6 +80,7 @@ const jsonInputs = ref<JsonInput[]>([
 ])
 
 const fusionResult = ref('')
+const loading = ref(false)
 
 const hasErrors = computed(() => {
   return jsonInputs.value.some(input => input.error !== null || !input.content.trim())
@@ -106,37 +109,51 @@ const validateJson = (index: number) => {
   }
 }
 
-const performFusion = () => {
+const performFusion = async () => {
+  if (hasErrors.value) {
+    ElMessage.warning('请确保所有输入都是有效的JSON格式')
+    return
+  }
+
   if (jsonInputs.value.some(input => !input.content.trim())) {
     ElMessage.warning('请确保所有输入框都不为空')
     return
   }
 
+  loading.value = true
   try {
     // 解析所有JSON输入
-    const parsedInputs = jsonInputs.value
-      .map(input => JSON.parse(input.content))
-      .filter(json => json) // 过滤掉空值
-
-    // 合并逻辑：如果有重复的内容，保留第一个出现的
-    const merged = parsedInputs.reduce((result, current) => {
-      const newItems = Array.isArray(current) ? current : [current]
-      
-      newItems.forEach(item => {
-        const itemStr = JSON.stringify(item)
-        if (!result.some(existing => JSON.stringify(existing) === itemStr)) {
-          result.push(item)
+    const validInputs = jsonInputs.value
+      .filter(input => input.content.trim())
+      .map(input => {
+        try {
+          const parsed = JSON.parse(input.content)
+          // 确保解析后的内容是对象类型
+          if (typeof parsed !== 'object' || Array.isArray(parsed) || parsed === null) {
+            throw new Error('输入必须是JSON对象格式')
+          }
+          return parsed
+        } catch (e) {
+          throw new Error(`JSON解析错误: ${e.message}`)
         }
       })
-      
-      return result
-    }, [] as any[])
 
-    fusionResult.value = JSON.stringify(merged, null, 2)
-    ElMessage.success('内容合并成功')
-  } catch (e) {
-    console.error('Fusion error:', e)
-    ElMessage.error('合并过程中发生错误，请检查输入的JSON格式是否正确')
+    if (validInputs.length === 0) {
+      throw new Error('没有有效的JSON输入')
+    }
+
+    // 调用后端API进行AI融合
+    const response = await axios.post('http://localhost:8001/merge', {
+      contents: validInputs
+    })
+    
+    fusionResult.value = JSON.stringify(response.data.result, null, 2)
+    ElMessage.success('内容融合成功')
+  } catch (error) {
+    console.error('Fusion error:', error)
+    ElMessage.error('融合失败：' + (error as Error).message)
+  } finally {
+    loading.value = false
   }
 }
 </script>

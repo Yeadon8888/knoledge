@@ -29,10 +29,10 @@ else:
 app = FastAPI()
 moonshot = MoonshotAPI(MOONSHOT_API_KEY)
 
-# Configure CORS
+# 配置CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # 在生产环境中应该设置为具体的域名
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,6 +50,12 @@ class ExtractRequest(BaseModel):
 
 class ExtractResponse(BaseModel):
     keywords: dict
+
+class MergeRequest(BaseModel):
+    contents: list[dict]
+
+class MergeResponse(BaseModel):
+    result: dict
 
 def extract_content(html_content: str) -> tuple:
     """从HTML中提取标题和正文内容"""
@@ -144,6 +150,37 @@ async def extract(request: ExtractRequest):
         return ExtractResponse(keywords=keywords)
     except Exception as e:
         logger.error(f"Error extracting content: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/merge", response_model=MergeResponse)
+async def merge(request: MergeRequest):
+    """合并多个JSON格式的知识内容"""
+    try:
+        logger.info(f"Received merge request with {len(request.contents)} items")
+        logger.debug(f"Request contents: {request.contents}")
+        
+        # 验证输入数据
+        if not request.contents:
+            raise HTTPException(status_code=400, detail="No content provided")
+            
+        # 确保所有内容都是字典类型
+        contents = []
+        for item in request.contents:
+            if not isinstance(item, dict):
+                logger.error(f"Invalid content type: {type(item)}")
+                raise HTTPException(status_code=400, detail="All contents must be JSON objects")
+            contents.append(item)
+        
+        # 调用API进行合并
+        result = moonshot.merge_knowledge(contents)
+        logger.info("Successfully merged contents")
+        logger.debug(f"Merge result: {result}")
+        
+        return MergeResponse(result=result)
+    except Exception as e:
+        logger.error(f"Error in merge: {str(e)}", exc_info=True)
+        if isinstance(e, HTTPException):
+            raise e
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
