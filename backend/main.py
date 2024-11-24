@@ -98,48 +98,86 @@ def convert_to_mindmap(data: dict, parent_id: str = "root") -> dict:
     # 创建根节点
     root_node = {
         "id": parent_id,
-        "label": "Knowledge Map",
-        "type": "root"
+        "label": "知识地图",
+        "style": {
+            "fill": "#91d5ff",
+            "stroke": "#40a9ff"
+        }
     }
     nodes.append(root_node)
     
-    # 递归处理每个键值对
-    for i, (key, value) in enumerate(data.items()):
-        # 为每个键创建节点
-        node_id = f"{parent_id}-{i}"
-        node = {
+    def process_value(key: str, value: any, parent_id: str, index: int):
+        node_id = f"{parent_id}-{index}"
+        
+        # 创建键节点
+        key_node = {
             "id": node_id,
-            "label": key,
-            "type": "topic"
+            "label": str(key),
+            "style": {
+                "fill": "#d9f7be",
+                "stroke": "#73d13d"
+            }
         }
-        nodes.append(node)
+        nodes.append(key_node)
         
         # 创建与父节点的连接
-        edge = {
+        edges.append({
             "source": parent_id,
             "target": node_id,
-            "type": "line"
-        }
-        edges.append(edge)
+            "style": {
+                "stroke": "#91d5ff",
+                "endArrow": True
+            }
+        })
         
-        # 处理值（可能是数组）
-        if isinstance(value, list):
-            for j, item in enumerate(value):
-                leaf_id = f"{node_id}-{j}"
+        # 处理值
+        if isinstance(value, (list, tuple)):
+            for i, item in enumerate(value):
+                leaf_id = f"{node_id}-{i}"
                 leaf_node = {
                     "id": leaf_id,
                     "label": str(item),
-                    "type": "leaf"
+                    "style": {
+                        "fill": "#ffd6e7",
+                        "stroke": "#ff85c0"
+                    }
                 }
                 nodes.append(leaf_node)
-                
-                leaf_edge = {
+                edges.append({
                     "source": node_id,
                     "target": leaf_id,
-                    "type": "line"
+                    "style": {
+                        "stroke": "#73d13d",
+                        "endArrow": True
+                    }
+                })
+        elif isinstance(value, dict):
+            for i, (k, v) in enumerate(value.items()):
+                process_value(k, v, node_id, i)
+        else:
+            leaf_id = f"{node_id}-value"
+            leaf_node = {
+                "id": leaf_id,
+                "label": str(value),
+                "style": {
+                    "fill": "#ffd6e7",
+                    "stroke": "#ff85c0"
                 }
-                edges.append(leaf_edge)
-                
+            }
+            nodes.append(leaf_node)
+            edges.append({
+                "source": node_id,
+                "target": leaf_id,
+                "style": {
+                    "stroke": "#73d13d",
+                    "endArrow": True
+                }
+            })
+    
+    # 处理每个顶层键值对
+    for i, (key, value) in enumerate(data.items()):
+        process_value(key, value, parent_id, i)
+    
     return {
         "nodes": nodes,
         "edges": edges

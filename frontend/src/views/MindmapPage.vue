@@ -73,6 +73,7 @@ const generateMindmap = async () => {
     if (graph) {
       graph.data(mindmapData)
       graph.render()
+      graph.fitView()
     }
     
     ElMessage.success('脑图生成成功')
@@ -90,39 +91,93 @@ const initGraph = () => {
   
   const width = container.value.offsetWidth || 800
   const height = container.value.offsetHeight || 600
+
+  // 注册自定义节点
+  G6.registerNode('knowledge-node', {
+    draw(cfg: any, group: any) {
+      const { label, style = {} } = cfg
+      const keyShape = group.addShape('rect', {
+        attrs: {
+          x: -75,
+          y: -25,
+          width: 150,
+          height: 50,
+          radius: 8,
+          fill: style.fill || '#91d5ff',
+          stroke: style.stroke || '#69c0ff',
+          lineWidth: 2,
+          cursor: 'pointer',
+        },
+        name: 'rect-shape',
+      });
+
+      group.addShape('text', {
+        attrs: {
+          text: label,
+          x: 0,
+          y: 0,
+          textAlign: 'center',
+          textBaseline: 'middle',
+          fill: '#333',
+          fontSize: 14,
+          fontWeight: 500,
+          cursor: 'pointer',
+        },
+        name: 'text-shape',
+      });
+
+      return keyShape;
+    },
+  });
   
   graph = new G6.Graph({
     container: container.value,
     width,
     height,
     modes: {
-      default: ['drag-canvas', 'zoom-canvas', 'drag-node']
+      default: [
+        'drag-canvas',
+        'zoom-canvas',
+        {
+          type: 'drag-node',
+          enableDelegate: true,
+        }
+      ]
     },
     layout: {
-      type: 'mindmap',
-      direction: 'H',
-      getHeight: () => 40,
-      getWidth: () => 100,
-      getVGap: () => 20,
-      getHGap: () => 100
+      type: 'dendrogram',
+      direction: 'LR',
+      nodeSep: 50,
+      rankSep: 100,
+      radial: false,
     },
     defaultNode: {
-      type: 'rect',
-      style: {
-        radius: 5,
-        stroke: '#69c0ff',
-        fill: '#ffffff',
-        lineWidth: 2,
-        fillOpacity: 0.9
-      }
+      type: 'knowledge-node',
     },
     defaultEdge: {
       type: 'cubic-horizontal',
       style: {
         stroke: '#A3B1BF',
-        lineWidth: 2
+        lineWidth: 2,
+        endArrow: {
+          path: 'M 0,0 L 8,4 L 8,-4 Z',
+          fill: '#A3B1BF',
+        },
       }
+    },
+    fitView: true,
+    animate: true,
+    animateCfg: {
+      duration: 500,
+      easing: 'easeQuadOut',
     }
+  })
+
+  // 添加节点点击事件
+  graph.on('node:click', (evt: any) => {
+    const { item } = evt
+    const model = item.getModel()
+    console.log('Clicked node:', model)
   })
 }
 
