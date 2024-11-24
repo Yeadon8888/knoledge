@@ -5,6 +5,28 @@ import WebCrawler from './components/WebCrawler.vue'
 
 const route = useRoute()
 const activeMenu = ref(route.path)
+const menuItems = [
+  {
+    icon: 'fas fa-home',
+    text: '首页',
+    route: '/'
+  },
+  {
+    icon: 'fas fa-spider',
+    text: '知识建立',
+    route: '/crawler'
+  },
+  {
+    icon: 'fas fa-network-wired',
+    text: '知识融合',
+    route: '/fusion'
+  },
+  {
+    icon: 'fas fa-project-diagram',
+    text: '知识管理',
+    route: '/mindmap'
+  }
+]
 </script>
 
 <template>
@@ -15,9 +37,10 @@ const activeMenu = ref(route.path)
       router
       class="nav-menu"
     >
-      <el-menu-item index="/">首页</el-menu-item>
-      <el-menu-item index="/crawler">网页分析</el-menu-item>
-      <el-menu-item index="/fusion">内容融合</el-menu-item>
+      <el-menu-item v-for="item in menuItems" :key="item.route" :index="item.route">
+        <i :class="item.icon"></i>
+        {{ item.text }}
+      </el-menu-item>
     </el-menu>
     
     <router-view />

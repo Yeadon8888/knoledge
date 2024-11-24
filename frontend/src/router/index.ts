@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
 import CrawlerPage from '../views/CrawlerPage.vue'
 import FusionPage from '../views/FusionPage.vue'
+import MindMapPage from '../views/MindMapPage.vue'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -18,6 +19,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/fusion',
     name: 'FusionPage',
     component: FusionPage
+  },
+  {
+    path: '/mindmap',
+    name: 'MindMapPage',
+    component: MindMapPage
   }
 ]
 
@@ -26,4 +32,4 @@ const router = createRouter({
   routes
 })
 
-export default router 
+export default router

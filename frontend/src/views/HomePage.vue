@@ -113,15 +113,11 @@ const handleCardHover = (e: MouseEvent) => {
   const rect = card.getBoundingClientRect()
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
-  
   const centerX = rect.width / 2
   const centerY = rect.height / 2
-  
   const rotateX = (y - centerY) / 10
   const rotateY = (centerX - x) / 10
-  
   card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.05, 1.05, 1.05)`
-  
   const shine = card.querySelector('.card-shine') as HTMLElement
   if (shine) {
     shine.style.opacity = '1'
@@ -132,7 +128,6 @@ const handleCardHover = (e: MouseEvent) => {
 const handleCardLeave = (e: MouseEvent) => {
   const card = e.currentTarget as HTMLElement
   card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)'
-  
   const shine = card.querySelector('.card-shine') as HTMLElement
   if (shine) {
     shine.style.opacity = '0'
@@ -175,8 +170,8 @@ const features = [
     icon: 'fas fa-project-diagram',
     iconClass: 'icon-management',
     title: '知识管理',
-    description: '多维度分类整理知识点，可视化展示知识关系网络，支持知识图谱编辑与版本管理，提供协同管理功能',
-    action: () => router.push('/management')
+    description: '多维度分类整理知识点，可视化展示知识关系网络，支持知识图谱编辑与版本管理，提供知识脑图功能',
+    action: () => router.push('/mindmap')
   },
   {
     icon: 'fas fa-search',

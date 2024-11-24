@@ -57,6 +57,12 @@ class MergeRequest(BaseModel):
 class MergeResponse(BaseModel):
     result: dict
 
+class MindmapRequest(BaseModel):
+    json_data: dict
+
+class MindmapResponse(BaseModel):
+    mindmap_data: dict
+
 def extract_content(html_content: str) -> tuple:
     """从HTML中提取标题和正文内容"""
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -83,6 +89,61 @@ def extract_content(html_content: str) -> tuple:
     content = ' '.join(chunk for chunk in chunks if chunk)
     
     return title, content
+
+def convert_to_mindmap(data: dict, parent_id: str = "root") -> dict:
+    """将JSON数据转换为脑图数据结构"""
+    nodes = []
+    edges = []
+    
+    # 创建根节点
+    root_node = {
+        "id": parent_id,
+        "label": "Knowledge Map",
+        "type": "root"
+    }
+    nodes.append(root_node)
+    
+    # 递归处理每个键值对
+    for i, (key, value) in enumerate(data.items()):
+        # 为每个键创建节点
+        node_id = f"{parent_id}-{i}"
+        node = {
+            "id": node_id,
+            "label": key,
+            "type": "topic"
+        }
+        nodes.append(node)
+        
+        # 创建与父节点的连接
+        edge = {
+            "source": parent_id,
+            "target": node_id,
+            "type": "line"
+        }
+        edges.append(edge)
+        
+        # 处理值（可能是数组）
+        if isinstance(value, list):
+            for j, item in enumerate(value):
+                leaf_id = f"{node_id}-{j}"
+                leaf_node = {
+                    "id": leaf_id,
+                    "label": str(item),
+                    "type": "leaf"
+                }
+                nodes.append(leaf_node)
+                
+                leaf_edge = {
+                    "source": node_id,
+                    "target": leaf_id,
+                    "type": "line"
+                }
+                edges.append(leaf_edge)
+                
+    return {
+        "nodes": nodes,
+        "edges": edges
+    }
 
 @app.get("/health")
 async def health_check():
@@ -181,6 +242,17 @@ async def merge(request: MergeRequest):
         logger.error(f"Error in merge: {str(e)}", exc_info=True)
         if isinstance(e, HTTPException):
             raise e
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/mindmap")
+async def create_mindmap(request: MindmapRequest):
+    """将JSON知识内容转换为脑图数据结构"""
+    try:
+        logger.info("Converting JSON to mindmap structure")
+        mindmap_data = convert_to_mindmap(request.json_data)
+        return MindmapResponse(mindmap_data=mindmap_data)
+    except Exception as e:
+        logger.error(f"Error creating mindmap: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
