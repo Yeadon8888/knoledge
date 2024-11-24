@@ -71,9 +71,42 @@ const generateMindmap = async () => {
     
     const mindmapData = response.data.mindmap_data
     if (graph) {
+      // 更新数据
       graph.data(mindmapData)
+      
+      // 应用布局
+      graph.updateLayout({
+        type: 'compactBox',
+        direction: 'LR',
+        getId: function getId(d: any) {
+          return d.id;
+        },
+        getHeight: () => 60,
+        getWidth: () => 160,
+        getVGap: () => 80,
+        getHGap: () => 200,
+      })
+      
+      // 渲染并适应视图
       graph.render()
-      graph.fitView()
+      
+      // 等待布局完成后再适应视图
+      setTimeout(() => {
+        graph.fitView(50)
+        graph.zoomTo(0.8)
+        
+        // 手动调整节点位置以确保不重叠
+        const nodes = graph.getNodes()
+        nodes.forEach((node: any) => {
+          const model = node.getModel()
+          const originX = model.x
+          const originY = model.y
+          graph.updateItem(node, {
+            x: originX * 1.2,  // 水平拉伸
+            y: originY * 1.1   // 垂直拉伸
+          })
+        })
+      }, 500)
     }
     
     ElMessage.success('脑图生成成功')
@@ -145,11 +178,15 @@ const initGraph = () => {
       ]
     },
     layout: {
-      type: 'dendrogram',
+      type: 'compactBox',
       direction: 'LR',
-      nodeSep: 50,
-      rankSep: 100,
-      radial: false,
+      getId: function getId(d: any) {
+        return d.id;
+      },
+      getHeight: () => 60,
+      getWidth: () => 160,
+      getVGap: () => 80,
+      getHGap: () => 200,
     },
     defaultNode: {
       type: 'knowledge-node',
@@ -187,6 +224,36 @@ const handleResize = () => {
     const width = container.value.offsetWidth || 800
     const height = container.value.offsetHeight || 600
     graph.changeSize(width, height)
+    
+    // 重新布局并适应视图
+    graph.updateLayout({
+      type: 'compactBox',
+      direction: 'LR',
+      getId: function getId(d: any) {
+        return d.id;
+      },
+      getHeight: () => 60,
+      getWidth: () => 160,
+      getVGap: () => 80,
+      getHGap: () => 200,
+    })
+    
+    setTimeout(() => {
+      graph.fitView(50)
+      graph.zoomTo(0.8)
+      
+      // 手动调整节点位置以确保不重叠
+      const nodes = graph.getNodes()
+      nodes.forEach((node: any) => {
+        const model = node.getModel()
+        const originX = model.x
+        const originY = model.y
+        graph.updateItem(node, {
+          x: originX * 1.2,
+          y: originY * 1.1
+        })
+      })
+    }, 500)
   }
 }
 
