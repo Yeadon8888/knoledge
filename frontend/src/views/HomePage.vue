@@ -153,6 +153,13 @@ onMounted(() => {
 
 const features = [
   {
+    icon: 'fas fa-search',
+    iconClass: 'icon-search',
+    title: '智能检索',
+    description: '基于AI的智能问答系统，快速获取所需知识',
+    action: () => router.push('/chat')
+  },
+  {
     icon: 'fas fa-spider',
     iconClass: 'icon-spider',
     title: '知识建立',
@@ -160,10 +167,10 @@ const features = [
     action: () => router.push('/crawler')
   },
   {
-    icon: 'fas fa-network-wired',
+    icon: 'fas fa-magic',
     iconClass: 'icon-fusion',
     title: '知识融合',
-    description: '智能分析多源数据关联性，自动对齐知识实体，构建完整知识图谱，实现知识的有机整合与互联互通',
+    description: '智能分析知识内容，建立知识关联，形成知识网络，支持知识推理',
     action: () => router.push('/fusion')
   },
   {
@@ -172,18 +179,11 @@ const features = [
     title: '知识管理',
     description: '多维度分类整理知识点，可视化展示知识关系网络，支持知识图谱编辑与版本管理，提供知识脑图功能',
     action: () => router.push('/mindmap')
-  },
-  {
-    icon: 'fas fa-search',
-    iconClass: 'icon-search',
-    title: '智能检索',
-    description: '基于语义理解的智能搜索，支持多条件组合查询，提供相关知识推荐，快速定位目标知识点并展示知识路径',
-    action: () => router.push('/search')
   }
 ]
 
 const startExplore = () => {
-  router.push('/crawler')
+  router.push('/chat')
 }
 </script>
 
