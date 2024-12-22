@@ -307,13 +307,8 @@ async def search(request: SearchRequest):
         response = await moonshot.search(request.query)
         
         # 格式化返回结果
-        formatted_response = f"""### 检索结果
-
-{response}
-
----
-*注：以上内容由AI助手基于知识库生成，仅供参考。*
-"""
+        formatted_response = response
+        
         return SearchResponse(result=formatted_response)
     
     except Exception as e:
