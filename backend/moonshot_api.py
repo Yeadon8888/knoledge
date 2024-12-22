@@ -1,6 +1,7 @@
 import logging
 import json
 from openai import OpenAI
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -238,3 +239,51 @@ class MoonshotAPI:
             logger.error(f"Error in merge_knowledge: {str(e)}")
             logger.error("Full error traceback:", exc_info=True)
             raise
+
+class MoonshotAPIAsync:
+    def __init__(self, api_key: str):
+        self.api_key = api_key
+        self.base_url = "https://api.moonshot.cn/v1"
+        self.headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+    
+    async def search(self, query: str) -> str:
+        """
+        使用Moonshot API进行知识检索
+        
+        Args:
+            query: 用户的检索问题
+            
+        Returns:
+            str: AI助手的回答
+        """
+        async with aiohttp.ClientSession() as session:
+            payload = {
+                "model": "moonshot-v1-8k",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "你是一个知识管理助手，负责帮助用户检索和理解知识。请用简单易懂的语言回答问题，并在适当的时候给出具体的例子。"
+                    },
+                    {
+                        "role": "user",
+                        "content": query
+                    }
+                ],
+                "temperature": 0.7,
+                "max_tokens": 800
+            }
+            
+            async with session.post(
+                f"{self.base_url}/chat/completions",
+                headers=self.headers,
+                json=payload
+            ) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"Moonshot API error: {error_text}")
+                
+                data = await response.json()
+                return data["choices"][0]["message"]["content"]

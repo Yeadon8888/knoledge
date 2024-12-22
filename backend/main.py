@@ -63,6 +63,12 @@ class MindmapRequest(BaseModel):
 class MindmapResponse(BaseModel):
     mindmap_data: dict
 
+class SearchRequest(BaseModel):
+    query: str
+
+class SearchResponse(BaseModel):
+    result: str
+
 def extract_content(html_content: str) -> tuple:
     """从HTML中提取标题和正文内容"""
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -292,6 +298,30 @@ async def create_mindmap(request: MindmapRequest):
     except Exception as e:
         logger.error(f"Error creating mindmap: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/search", response_model=SearchResponse)
+async def search(request: SearchRequest):
+    """处理智能检索请求"""
+    try:
+        # 使用Moonshot API进行知识检索
+        response = await moonshot.search(request.query)
+        
+        # 格式化返回结果
+        formatted_response = f"""### 检索结果
+
+{response}
+
+---
+*注：以上内容由AI助手基于知识库生成，仅供参考。*
+"""
+        return SearchResponse(result=formatted_response)
+    
+    except Exception as e:
+        logger.error(f"Search error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="知识检索失败，请稍后重试"
+        )
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)

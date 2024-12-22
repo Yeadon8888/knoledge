@@ -22,6 +22,11 @@ const menuItems = [
     route: '/fusion'
   },
   {
+    icon: 'fas fa-search',
+    text: '智能检索',
+    route: '/search'
+  },
+  {
     icon: 'fas fa-project-diagram',
     text: '知识管理',
     route: '/mindmap'
