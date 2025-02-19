@@ -75,6 +75,7 @@ class SearchResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    context: str = ""  # 新增知识库上下文字段，默认为空字符串
 
 class ChatResponse(BaseModel):
     response: str
@@ -331,11 +332,20 @@ async def search(request: SearchRequest):
 @app.post("/chat")
 async def chat(request: ChatRequest) -> ChatResponse:
     """
-    处理聊天请求
+    处理聊天请求，支持知识库上下文
     """
     try:
+        # 构建带有上下文的提示信息
+        prompt = f"""请基于以下知识背景来回答问题：
+
+{request.context}
+
+用户问题：{request.message}
+
+请根据上述知识背景，专业且详细地回答用户的问题。如果知识背景中没有相关信息，你可以基于你的知识来回答，但要说明这一点。
+"""
         # 调用DeepSeek API获取回答
-        response = deepseek.get_knowledge_response(request.message)
+        response = deepseek.get_knowledge_response(prompt)
         return ChatResponse(response=response)
     except Exception as e:
         logger.error(f"聊天请求处理失败: {str(e)}")

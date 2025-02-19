@@ -1,57 +1,86 @@
 <template>
   <div class="chat-container">
-    <div class="chat-header">
-      <h1>🤖 智能知识助手</h1>
-      <p>基于DeepSeek R1的智能知识管理助手，为您提供专业的知识管理服务</p>
-    </div>
-
-    <div class="chat-messages" ref="messagesContainer">
-      <div v-for="(message, index) in messages" :key="index" 
-           :class="['message', message.role === 'user' ? 'user-message' : 'assistant-message']">
-        <div class="message-content">
-          <div class="avatar">
-            {{ message.role === 'user' ? '👤' : '🤖' }}
-          </div>
-          <div class="text">{{ message.content }}</div>
+    <!-- 左侧知识库面板 -->
+    <div class="knowledge-panel">
+      <div class="knowledge-header">
+        <h2>📚 知识库</h2>
+        <div class="knowledge-search">
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="搜索知识..."
+            @input="searchKnowledge"
+          />
         </div>
       </div>
-      <div v-if="loading" class="message assistant-message">
-        <div class="message-content">
-          <div class="avatar">🤖</div>
-          <div class="typing-indicator">
-            <span></span>
-            <span></span>
-            <span></span>
-          </div>
+      <div class="knowledge-list">
+        <div 
+          v-for="(item, index) in knowledgeItems" 
+          :key="index"
+          :class="['knowledge-item', { active: selectedKnowledge.includes(item.id) }]"
+          @click="toggleKnowledge(item.id)"
+        >
+          <div class="knowledge-title">{{ item.title }}</div>
+          <div class="knowledge-preview">{{ item.preview }}</div>
         </div>
       </div>
     </div>
 
-    <div class="chat-input">
-      <div class="input-container">
-        <textarea
-          v-model="inputMessage"
-          @keydown.enter.prevent="sendMessage"
-          placeholder="请输入您的问题..."
-          :disabled="loading"
-          rows="1"
-          ref="inputTextarea"
-        ></textarea>
-        <button @click="sendMessage" :disabled="loading || !inputMessage.trim()">
-          发送
-        </button>
+    <!-- 右侧聊天区域 -->
+    <div class="chat-main">
+      <div class="chat-header">
+        <h1>🤖 智能知识助手</h1>
+        <p>基于DeepSeek R1的智能知识管理助手，为您提供专业的知识管理服务</p>
       </div>
-      <div class="example-questions">
-        <div class="examples-title">💡 示例问题：</div>
-        <div class="examples-grid">
-          <button
-            v-for="(question, index) in exampleQuestions"
-            :key="index"
-            @click="useExample(question)"
+
+      <div class="chat-messages" ref="messagesContainer">
+        <div v-for="(message, index) in messages" :key="index" 
+             :class="['message', message.role === 'user' ? 'user-message' : 'assistant-message']">
+          <div class="message-content">
+            <div class="avatar">
+              {{ message.role === 'user' ? '👤' : '🤖' }}
+            </div>
+            <div class="text">{{ message.content }}</div>
+          </div>
+        </div>
+        <div v-if="loading" class="message assistant-message">
+          <div class="message-content">
+            <div class="avatar">🤖</div>
+            <div class="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+        <div class="input-container">
+          <textarea
+            v-model="inputMessage"
+            @keydown.enter.prevent="sendMessage"
+            placeholder="请输入您的问题..."
             :disabled="loading"
-          >
-            {{ question }}
+            rows="1"
+            ref="inputTextarea"
+          ></textarea>
+          <button @click="sendMessage" :disabled="loading || !inputMessage.trim()">
+            发送
           </button>
+        </div>
+        <div class="example-questions">
+          <div class="examples-title">💡 示例问题：</div>
+          <div class="examples-grid">
+            <button
+              v-for="(question, index) in exampleQuestions"
+              :key="index"
+              @click="useExample(question)"
+              :disabled="loading"
+            >
+              {{ question }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -80,9 +109,53 @@ const exampleQuestions = [
   '如何做好知识的分类和标签管理？'
 ]
 
+// 新增知识库相关的状态
+const searchQuery = ref('')
+const knowledgeItems = ref([
+  { 
+    id: 1, 
+    title: '知识管理基础', 
+    preview: '知识管理是一个系统化的过程，包括知识的获取、组织、共享和应用...',
+    content: '知识管理是一个系统化的过程，包括知识的获取、组织、共享和应用。有效的知识管理可以提高个人和组织的效率，促进创新和决策。'
+  },
+  { 
+    id: 2, 
+    title: '知识分类方法', 
+    preview: '知识分类的常用方法包括层级分类、标签分类、主题分类等...',
+    content: '知识分类的常用方法包括层级分类、标签分类、主题分类等。选择合适的分类方法可以让知识更容易检索和管理。'
+  },
+  { 
+    id: 3, 
+    title: '知识工具选择', 
+    preview: '选择合适的知识管理工具对于提高效率至关重要...',
+    content: '选择合适的知识管理工具对于提高效率至关重要。常用的工具包括Notion、Obsidian、Evernote等，每个工具都有其特点和适用场景。'
+  }
+])
+const selectedKnowledge = ref<number[]>([])
+
+// 新增知识库相关的方法
+function searchKnowledge() {
+  // 实现知识搜索逻辑
+}
+
+function toggleKnowledge(id: number) {
+  const index = selectedKnowledge.value.indexOf(id)
+  if (index === -1) {
+    selectedKnowledge.value.push(id)
+  } else {
+    selectedKnowledge.value.splice(index, 1)
+  }
+}
+
 async function sendMessage() {
   const message = inputMessage.value.trim()
   if (!message || loading.value) return
+
+  // 获取选中的知识内容
+  const selectedContent = knowledgeItems.value
+    .filter(item => selectedKnowledge.value.includes(item.id))
+    .map(item => item.content)
+    .join('\n\n')
 
   // 添加用户消息
   messages.value.push({
@@ -94,13 +167,16 @@ async function sendMessage() {
   loading.value = true
 
   try {
-    // 发送请求到后端
+    // 发送请求到后端，包含知识库上下文
     const response = await fetch('http://localhost:8001/chat', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ 
+        message,
+        context: selectedContent 
+      })
     })
 
     if (!response.ok) {
@@ -147,9 +223,80 @@ onMounted(() => {
 <style scoped>
 .chat-container {
   display: flex;
-  flex-direction: column;
   height: 100vh;
   background-color: #f5f7fa;
+}
+
+.knowledge-panel {
+  width: 300px;
+  background: white;
+  border-right: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+}
+
+.knowledge-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.knowledge-header h2 {
+  margin-bottom: 1rem;
+  color: #1a237e;
+}
+
+.knowledge-search input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.knowledge-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.knowledge-item {
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.knowledge-item:hover {
+  background: #f5f5f5;
+  transform: translateY(-2px);
+}
+
+.knowledge-item.active {
+  border-color: #1a237e;
+  background: #e3f2fd;
+}
+
+.knowledge-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1a237e;
+}
+
+.knowledge-preview {
+  font-size: 0.9rem;
+  color: #666;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 2rem;
 }
 
