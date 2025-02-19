@@ -1,92 +1,66 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
-import WebCrawler from './components/WebCrawler.vue'
-
-const route = useRoute()
-const activeMenu = ref(route.path)
-const menuItems = [
-  {
-    icon: 'fas fa-home',
-    text: '首页',
-    route: '/'
-  },
-  {
-    icon: 'fas fa-spider',
-    text: '知识建立',
-    route: '/crawler'
-  },
-  {
-    icon: 'fas fa-network-wired',
-    text: '知识融合',
-    route: '/fusion'
-  },
-  {
-    icon: 'fas fa-search',
-    text: '智能检索',
-    route: '/search'
-  },
-  {
-    icon: 'fas fa-project-diagram',
-    text: '知识管理',
-    route: '/mindmap'
-  }
-]
+// App component logic
 </script>
 
 <template>
-  <div class="app-container">
-    <el-menu
-      :default-active="activeMenu"
-      mode="horizontal"
-      router
-      class="nav-menu"
-    >
-      <el-menu-item v-for="item in menuItems" :key="item.route" :index="item.route">
-        <i :class="item.icon"></i>
-        {{ item.text }}
-      </el-menu-item>
-    </el-menu>
-    
-    <router-view />
+  <div id="app">
+    <router-view v-slot="{ Component }">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </div>
 </template>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  width: 100%;
+  height: 100vh;
   margin: 0;
   padding: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Reset default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
-.app-container {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.nav-menu {
-  padding: 0 20px;
-  background: transparent;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-:root {
-  --el-menu-hover-bg-color: rgba(255, 255, 255, 0.1);
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
 }
 
-.el-menu--horizontal > .el-menu-item.is-active {
-  border-bottom: 2px solid var(--el-menu-active-color);
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
-.el-menu--horizontal > .el-menu-item:not(.is-disabled):hover {
-  background-color: rgba(255, 255, 255, 0.1);
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 </style>

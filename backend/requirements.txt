@@ -1,9 +1,10 @@
-fastapi
-uvicorn
-requests
-beautifulsoup4
-chardet
+fastapi>=0.68.0
+uvicorn>=0.15.0
+requests>=2.26.0
+beautifulsoup4>=4.9.3
+chardet>=4.0.0
 openai>=1.0.0
-python-dotenv
-aiohttp
+python-dotenv>=0.19.0
+aiohttp>=3.8.0
 gradio>=4.0.0
+python-multipart>=0.0.5

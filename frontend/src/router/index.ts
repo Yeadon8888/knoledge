@@ -1,41 +1,41 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../views/HomePage.vue'
-import CrawlerPage from '../views/CrawlerPage.vue'
-import FusionPage from '../views/FusionPage.vue'
-import MindMapPage from '../views/MindMapPage.vue'
-import SearchPage from '../views/SearchPage.vue'
-
-const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/',
-    name: 'HomePage',
-    component: HomePage
-  },
-  {
-    path: '/crawler',
-    name: 'CrawlerPage',
-    component: CrawlerPage
-  },
-  {
-    path: '/fusion',
-    name: 'FusionPage',
-    component: FusionPage
-  },
-  {
-    path: '/search',
-    name: 'SearchPage',
-    component: SearchPage
-  },
-  {
-    path: '/mindmap',
-    name: 'MindMapPage',
-    component: MindMapPage
-  }
-]
+import ChatPage from '../views/ChatPage.vue'
 
 const router = createRouter({
-  history: createWebHistory(),
-  routes
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      name: 'home',
+      component: HomePage
+    },
+    {
+      path: '/chat',
+      name: 'chat',
+      component: ChatPage
+    },
+    {
+      path: '/crawler',
+      name: 'crawler',
+      component: () => import('../views/CrawlerPage.vue')
+    },
+    {
+      path: '/fusion',
+      name: 'fusion',
+      component: () => import('../views/FusionPage.vue')
+    },
+    {
+      path: '/mindmap',
+      name: 'mindmap',
+      component: () => import('../views/MindmapPage.vue')
+    },
+    {
+      path: '/search',
+      name: 'search',
+      component: () => import('../views/SearchPage.vue')
+    }
+  ]
 })
 
 export default router

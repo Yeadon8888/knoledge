@@ -1,33 +1,33 @@
-# Knowledge Management System
+# 知识管理系统
 
-一个现代化的知识管理系统，支持多源知识获取、融合与智能检索。
+这是一个基于 AI 的知识管理系统，支持网页内容爬取、知识提取、知识合并、知识图谱生成等功能。
 
 ## 功能特点
 
-- 📚 多源知识获取：支持从多个来源爬取和整合知识
-- 🔄 知识融合：智能融合不同来源的知识，构建统一的知识图谱
-- 🔍 智能检索：基于先进的AI模型进行知识检索和问答
-- 📊 知识管理：直观的知识管理界面，支持知识的组织与维护
+### 1. 网页爬取
+- 支持从任意 URL 爬取网页内容
+- 自动处理各种编码格式
+- 智能提取网页标题和正文
 
-## 使用指南
+### 2. 知识提取
+- 使用 AI 技术从文本中提取结构化知识
+- 自动识别关键信息类别
+- 生成标准 JSON 格式输出
 
-### 1. 知识获取
-系统支持多种方式获取知识：
-- **网页爬取**：输入网页URL，系统会自动提取主要内容
-- **文本导入**：直接粘贴或上传文本内容
-- **API对接**：支持与其他知识库系统对接
+### 3. 知识合并
+- 智能合并多个知识点
+- 自动去重和整合
+- 保持信息完整性
 
-### 2. 知识融合
-系统会自动对不同来源的知识进行智能融合：
-- 自动去重和合并相似内容
-- 建立知识点之间的关联
-- 生成结构化的知识图谱
+### 4. 知识图谱
+- 生成可视化知识图谱
+- 支持自定义节点样式
+- 直观展示知识结构
 
-### 3. 智能检索
-提供多种检索方式：
-- **关键词搜索**：支持精确匹配和模糊匹配
-- **自然语言问答**：直接用问题形式检索答案
-- **知识推荐**：根据用户兴趣推荐相关知识
+### 5. 知识搜索
+- 支持语义化搜索
+- 快速定位相关知识
+- 精准匹配内容
 
 ## 技术栈
 
@@ -35,182 +35,102 @@
 - Vue 3
 - TypeScript
 - Element Plus
-- Vue Router
-- Axios
 - Vite
 
 ### 后端
+- Python 3.8+
 - FastAPI
-- OpenAI API
-- BeautifulSoup4
 - Moonshot API
-- Python 3.8+
+- BeautifulSoup4
 
-## 项目结构
+## 安装说明
 
-```
-knoledge/
-├── frontend/               # 前端项目目录
-│   ├── src/               # 源代码
-│   │   ├── views/         # 页面组件
-│   │   │   ├── HomePage.vue       # 主页
-│   │   │   ├── FusionPage.vue    # 知识融合页面
-│   │   │   └── CrawlerPage.vue   # 知识获取页面
-│   │   └── ...
-│   ├── package.json       # 前端依赖配置
-│   └── vite.config.ts     # Vite配置
-│
-└── backend/               # 后端项目目录
-    ├── main.py           # 主程序入口
-    ├── moonshot_api.py   # Moonshot API 集成
-    └── requirements.txt   # Python依赖
-
-```
-
-## API文档
-
-### 后端API
-
-#### 1. 知识爬取
-```http
-POST /api/crawl
-Content-Type: application/json
-
-{
-    "url": "https://example.com"
-}
-```
-
-#### 2. 知识融合
-```http
-POST /api/merge
-Content-Type: application/json
-
-{
-    "contents": [
-        {"title": "内容1", "content": "..."},
-        {"title": "内容2", "content": "..."}
-    ]
-}
-```
-
-#### 3. 智能搜索
-```http
-POST /api/search
-Content-Type: application/json
-
-{
-    "query": "搜索问题"
-}
-```
-
-## 快速开始
-
-### 环境要求
-- Node.js 16+
-- Python 3.8+
-- 包管理器 (npm/yarn)
-
-### 后端设置
-
-1. 创建并激活Python虚拟环境
+### 前端安装
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\\Scripts\\activate   # Windows
+cd frontend
+npm install
+npm run dev
 ```
 
-2. 安装依赖
+### 后端安装
 ```bash
 cd backend
 pip install -r requirements.txt
+python main.py
 ```
 
-3. 配置环境变量
-创建 `.env` 文件：
+## 环境配置
+
+### 前端环境变量 (.env)
+```
+VITE_API_BASE_URL=http://localhost:8000
+```
+
+### 后端环境变量 (.env)
 ```
 MOONSHOT_API_KEY=your_api_key_here
 ```
 
-4. 启动后端服务
-```bash
-python main.py
+## API 文档
+
+### 1. 爬取网页
+```
+POST /crawl
+Request: { "url": "网页地址" }
+Response: { "title": "标题", "content": "内容" }
 ```
 
-### 前端设置
-
-1. 安装依赖
-```bash
-cd frontend
-npm install
+### 2. 提取知识
+```
+POST /extract
+Request: { "content": "文本内容" }
+Response: { "keywords": { ... } }
 ```
 
-2. 启动开发服务器
-```bash
-npm run dev
+### 3. 合并知识
+```
+POST /merge
+Request: { "contents": [{...}, {...}] }
+Response: { "result": {...} }
 ```
 
-## 常见问题
+### 4. 生成知识图谱
+```
+POST /mindmap
+Request: { "json_data": {...} }
+Response: { "mindmap_data": {...} }
+```
 
-### 1. 知识爬取失败
-- 检查URL是否正确
-- 确认网页是否可以正常访问
-- 检查网页是否有反爬虫机制
+### 5. 搜索知识
+```
+POST /search
+Request: { "query": "搜索关键词" }
+Response: { "result": "搜索结果" }
+```
 
-### 2. 搜索无结果
-- 尝试使用不同的关键词
-- 确认知识库中是否已导入相关内容
-- 检查搜索语句是否准确
+## 开发计划
 
-### 3. 系统运行慢
-- 检查网络连接
-- 确认系统资源是否充足
-- 可能是正在处理大量数据，请耐心等待
+### 近期计划
+1. 添加数据库支持
+2. 实现用户认证系统
+3. 添加缓存层
+4. 完善测试用例
+5. 添加监控系统
 
-## 使用技巧
-
-1. **高效导入知识**
-   - 优先使用结构化的文档
-   - 分批导入大量内容
-   - 导入前进行内容预处理
-
-2. **优化搜索效果**
-   - 使用准确的关键词
-   - 利用高级搜索功能
-   - 注意知识分类管理
-
-3. **数据安全**
-   - 定期备份知识库
-   - 及时更新系统
-   - 注意数据隐私保护
-
-## 主要功能模块
-
-1. 知识获取
-   - 支持网页内容爬取
-   ![alt text](image-3.png)
-   ![alt text](image-2.png)
-   - 智能提取关键信息
-   ![alt text](image-1.png)
-
-2. 知识融合
-   - 多源知识整合
-   ![alt text](image-4.png)
-   - 知识图谱构建
-   ![alt text](image-5.png)
-
-3. 知识管理
-   - 知识组织
-   - 知识维护
-
-4. 智能检索
-   - 基于AI的知识检索
-   - 智能问答系统
+### 长期计划
+1. 支持更多知识源
+2. 优化知识提取算法
+3. 增强知识图谱功能
+4. 添加协作功能
+5. 支持知识导出导入
 
 ## 贡献指南
 
-欢迎提交Issue和Pull Request来帮助改进项目。
+1. Fork 项目
+2. 创建功能分支
+3. 提交更改
+4. 发起 Pull Request
 
 ## 许可证
 
-[MIT License](LICENSE)
+MIT License

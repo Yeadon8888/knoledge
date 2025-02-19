@@ -153,6 +153,13 @@ onMounted(() => {
 
 const features = [
   {
+    icon: 'fas fa-comments',
+    iconClass: 'icon-chat',
+    title: '智能助手',
+    description: '基于DeepSeek R1的智能知识管理助手，为您提供专业的知识管理服务和建议',
+    action: () => router.push('/chat')
+  },
+  {
     icon: 'fas fa-spider',
     iconClass: 'icon-spider',
     title: '知识建立',
