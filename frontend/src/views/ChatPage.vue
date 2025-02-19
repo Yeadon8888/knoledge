@@ -167,7 +167,14 @@ async function sendMessage() {
   loading.value = true
 
   try {
-    // 发送请求到后端，包含知识库上下文
+    // 创建一个新的消息对象用于流式输出
+    const assistantMessage = {
+      role: 'assistant',
+      content: ''
+    }
+    messages.value.push(assistantMessage)
+
+    // 创建 EventSource 连接
     const response = await fetch('http://localhost:8001/chat', {
       method: 'POST',
       headers: {
@@ -179,17 +186,48 @@ async function sendMessage() {
       })
     })
 
-    if (!response.ok) {
-      throw new Error('网络请求失败')
+    // 创建 ReadableStream
+    const reader = response.body?.getReader()
+    const decoder = new TextDecoder()
+
+    if (!reader) {
+      throw new Error('无法创建流读取器')
     }
 
-    const data = await response.json()
-    
-    // 添加助手回复
-    messages.value.push({
-      role: 'assistant',
-      content: data.response
-    })
+    // 读取流数据
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+
+      // 解码数据
+      const chunk = decoder.decode(value)
+      const lines = chunk.split('\n')
+
+      // 处理每一行数据
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6)
+          if (data === '[DONE]') {
+            break
+          }
+
+          try {
+            const parsed = JSON.parse(data)
+            if (parsed.content) {
+              // 更新最后一条消息的内容
+              assistantMessage.content += parsed.content
+              // 强制 Vue 更新视图
+              messages.value = [...messages.value]
+              // 滚动到底部
+              await nextTick()
+              scrollToBottom()
+            }
+          } catch (e) {
+            console.error('解析数据失败:', e)
+          }
+        }
+      }
+    }
   } catch (error) {
     messages.value.push({
       role: 'assistant',

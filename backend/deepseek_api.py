@@ -61,27 +61,27 @@ class DeepSeekAPI:
                     "content": self.system_content
                 })
 
+            # 强制设置stream为True
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                stream=stream,
+                stream=True,
                 max_tokens=max_tokens,
                 temperature=temperature,
                 top_p=top_p,
                 presence_penalty=presence_penalty,
                 frequency_penalty=frequency_penalty,
-                response_format={"type": "text"},
-                extra_body={
-                    "top_k": top_k,
-                    "repetition_penalty": repetition_penalty,
-                    "min_p": min_p
-                }
+                response_format={"type": "text"}
             )
-            
-            if stream:
-                return response
-            else:
-                return response.choices[0].message.content
+
+            # 处理流式响应
+            full_response = ""
+            for chunk in response:
+                if hasattr(chunk.choices[0].delta, "content"):
+                    content = chunk.choices[0].delta.content
+                    if content:
+                        full_response += content
+                        yield content
 
         except Exception as e:
             logger.error(f"DeepSeek API调用失败: {str(e)}")
@@ -99,13 +99,16 @@ class DeepSeekAPI:
                 }
             ]
             
-            response = self.chat_completion(
+            # 收集流式响应的所有内容
+            full_response = ""
+            for content in self.chat_completion(
                 messages=messages,
-                stream=False,
-                temperature=0.7  # 适当的温度以平衡创造性和准确性
-            )
+                stream=True,
+                temperature=0.7
+            ):
+                full_response += content
             
-            return response
+            return full_response
 
         except Exception as e:
             logger.error(f"获取知识回答失败: {str(e)}")

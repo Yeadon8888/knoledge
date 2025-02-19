@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import uvicorn
 import aiohttp
@@ -8,6 +9,7 @@ from bs4 import BeautifulSoup
 import chardet
 import logging
 import os
+import json
 from dotenv import load_dotenv
 from moonshot_api import MoonshotAPI
 from deepseek_api import DeepSeekAPI
@@ -330,9 +332,9 @@ async def search(request: SearchRequest):
         )
 
 @app.post("/chat")
-async def chat(request: ChatRequest) -> ChatResponse:
+async def chat(request: ChatRequest):
     """
-    处理聊天请求，支持知识库上下文
+    处理聊天请求，支持知识库上下文，返回SSE流
     """
     try:
         # 构建带有上下文的提示信息
@@ -344,9 +346,30 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
 请根据上述知识背景，专业且详细地回答用户的问题。如果知识背景中没有相关信息，你可以基于你的知识来回答，但要说明这一点。
 """
-        # 调用DeepSeek API获取回答
-        response = deepseek.get_knowledge_response(prompt)
-        return ChatResponse(response=response)
+        # 创建流式响应生成器
+        async def generate():
+            try:
+                # 调用DeepSeek API获取流式回答
+                for content in deepseek.chat_completion(
+                    messages=[{"role": "user", "content": prompt}],
+                    stream=True
+                ):
+                    if content:
+                        # 发送SSE消息
+                        yield f"data: {json.dumps({'content': content})}\n\n"
+                yield "data: [DONE]\n\n"
+            except Exception as e:
+                logger.error(f"流式输出错误: {str(e)}")
+                yield f"data: {json.dumps({'error': str(e)})}\n\n"
+
+        return StreamingResponse(
+            generate(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            }
+        )
     except Exception as e:
         logger.error(f"聊天请求处理失败: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
