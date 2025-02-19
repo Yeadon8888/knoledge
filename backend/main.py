@@ -10,6 +10,7 @@ import logging
 import os
 from dotenv import load_dotenv
 from moonshot_api import MoonshotAPI
+from deepseek_api import DeepSeekAPI
 
 # 配置日志
 logging.basicConfig(
@@ -37,6 +38,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 初始化DeepSeek API
+deepseek = DeepSeekAPI()
 
 class CrawlRequest(BaseModel):
     url: str
@@ -68,6 +72,12 @@ class SearchRequest(BaseModel):
 
 class SearchResponse(BaseModel):
     result: str
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    response: str
 
 def extract_content(html_content: str) -> tuple:
     """从HTML中提取标题和正文内容"""
@@ -317,6 +327,19 @@ async def search(request: SearchRequest):
             status_code=500,
             detail="知识检索失败，请稍后重试"
         )
+
+@app.post("/chat")
+async def chat(request: ChatRequest) -> ChatResponse:
+    """
+    处理聊天请求
+    """
+    try:
+        # 调用DeepSeek API获取回答
+        response = deepseek.get_knowledge_response(request.message)
+        return ChatResponse(response=response)
+    except Exception as e:
+        logger.error(f"聊天请求处理失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8001, reload=True)
