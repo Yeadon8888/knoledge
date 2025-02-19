@@ -27,13 +27,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElInput, ElButton } from 'element-plus'
-import G6 from '@antv/g6'
 import axios from 'axios'
 
-// 确保组件名称正确
-defineOptions({
-  name: 'MindMapPage'
-})
+// 声明全局G6变量
+declare const G6: any
 
 const container = ref<HTMLElement | null>(null)
 const jsonInput = ref('')
@@ -89,24 +86,7 @@ const generateMindmap = async () => {
       
       // 渲染并适应视图
       graph.render()
-      
-      // 等待布局完成后再适应视图
-      setTimeout(() => {
-        graph.fitView(50)
-        graph.zoomTo(0.8)
-        
-        // 手动调整节点位置以确保不重叠
-        const nodes = graph.getNodes()
-        nodes.forEach((node: any) => {
-          const model = node.getModel()
-          const originX = model.x
-          const originY = model.y
-          graph.updateItem(node, {
-            x: originX * 1.2,  // 水平拉伸
-            y: originY * 1.1   // 垂直拉伸
-          })
-        })
-      }, 500)
+      graph.fitView()
     }
     
     ElMessage.success('脑图生成成功')
@@ -120,7 +100,7 @@ const generateMindmap = async () => {
 
 // 初始化G6图表
 const initGraph = () => {
-  if (!container.value) return
+  if (!container.value || !G6) return
   
   const width = container.value.offsetWidth || 800
   const height = container.value.offsetHeight || 600
@@ -168,14 +148,7 @@ const initGraph = () => {
     width,
     height,
     modes: {
-      default: [
-        'drag-canvas',
-        'zoom-canvas',
-        {
-          type: 'drag-node',
-          enableDelegate: true,
-        }
-      ]
+      default: ['drag-canvas', 'zoom-canvas', 'drag-node']
     },
     layout: {
       type: 'compactBox',
@@ -204,17 +177,6 @@ const initGraph = () => {
     },
     fitView: true,
     animate: true,
-    animateCfg: {
-      duration: 500,
-      easing: 'easeQuadOut',
-    }
-  })
-
-  // 添加节点点击事件
-  graph.on('node:click', (evt: any) => {
-    const { item } = evt
-    const model = item.getModel()
-    console.log('Clicked node:', model)
   })
 }
 
@@ -224,36 +186,7 @@ const handleResize = () => {
     const width = container.value.offsetWidth || 800
     const height = container.value.offsetHeight || 600
     graph.changeSize(width, height)
-    
-    // 重新布局并适应视图
-    graph.updateLayout({
-      type: 'compactBox',
-      direction: 'LR',
-      getId: function getId(d: any) {
-        return d.id;
-      },
-      getHeight: () => 60,
-      getWidth: () => 160,
-      getVGap: () => 80,
-      getHGap: () => 200,
-    })
-    
-    setTimeout(() => {
-      graph.fitView(50)
-      graph.zoomTo(0.8)
-      
-      // 手动调整节点位置以确保不重叠
-      const nodes = graph.getNodes()
-      nodes.forEach((node: any) => {
-        const model = node.getModel()
-        const originX = model.x
-        const originY = model.y
-        graph.updateItem(node, {
-          x: originX * 1.2,
-          y: originY * 1.1
-        })
-      })
-    }, 500)
+    graph.fitView()
   }
 }
 
@@ -272,36 +205,32 @@ onUnmounted(() => {
 
 <style scoped>
 .mindmap-page {
-  height: calc(100vh - 60px);
   display: flex;
+  flex-direction: column;
+  height: 100vh;
   padding: 20px;
-  gap: 20px;
   background-color: #f5f7fa;
 }
 
 .control-panel {
-  width: 300px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  background-color: white;
+  background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+  margin-bottom: 20px;
 }
 
 .button-group {
+  margin-top: 16px;
   display: flex;
   justify-content: flex-end;
-  margin-top: 10px;
 }
 
 #mindmap-container {
   flex: 1;
-  border: 1px solid #e4e7ed;
+  background: white;
   border-radius: 8px;
-  background: #fff;
-  min-height: 500px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 </style>
